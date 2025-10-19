@@ -1,0 +1,630 @@
+WEEK 1
+
+CIS194
+
+1.
+
+x :: Int
+x = 3
+
+The above code declares a variable x with type Int (:: is pronounced “has type”) and declares the value of x to be 3. Note that this will be the value of x forever (at least, in this particular program). The value of x cannot be changed later.
+
+In Haskell, variables are not mutable boxes; they are just names for values!
+Put another way, = does NOT denote “assignment” like it does in many other languages. Instead, = denotes definition, like it does in mathematics. That is, x = 4 should not be read as “x gets 4” or “assign 4 to x”, but as “x is defined to be 4”.
+
+
+2.
+The first step in writing a Haskell program is usually to write down all the types. Because Haskell’s type system is so expressive, this is a non-trivial design step and is an immense help in clarifying one’s thinking about the program.
+
+
+
+LYHFGG
+
+1 
+The difference between Haskell’s if statement and if statements in imperative languages is that the else part is mandatory in Haskell. In imperative languages you can just skip a couple of steps if the condition isn’t satisfied, but in Haskell every expression and function must return something. Another thing about the if statement in Haskell is that it is an expression. An expression is basically a piece of code that returns a value. "5" is an expression because it returns 5, "4 + 8" is an expression, "x + y" is an expression because it returns the sum of x and y. Because the else is mandatory, an if statement will always return something and that’s why it’s an expression.
+
+
+2.
+In Haskell, lists are a homogenous data structure. It stores several elements of the same type. That means that we can have a list of integers or a list of characters but we can’t have a list that has a few integers and then a few characters.
+
+
+3.
+In some ways, tuples are like lists — they are a way to store several values into a single value. However, there are a few fundamental differences. A list of numbers is a list of numbers. That’s its type and it doesn’t matter if it has only one number in it or an infinite amount of numbers. Tuples, however, are used when you know exactly how many values you want to combine and its type depends on how many components it has and the types of the components.
+They are denoted with parentheses and their components are separated by commas.
+Another key difference is that they don’t have to be homogenous. Unlike a list, a tuple can contain a combination of several types.
+
+
+
+RWH
+
+1.
+Haskell assigns numeric precedence values to operators, with 1 being the lowest precedence and 9 the highest. A higher-precedence operator is applied before a lower-precedence operator. We can use ghci to inspect the precedence levels of individual operators, using its :info command.
+Haskell also defines associativity of operators. This determines whether an expression containing multiple uses of an operator is evaluated from left to right, or right to left. The (+) and (*) operators are left associative, which is represented as infixl in the ghci output above. A right associative operator is displayed with infixr (e.g.: like the exponential operator (^); n.b.: the esponential operator for floating numbers is (**)).
+The combination of precedence and associativity rules are usually referred to as fixity rules.
+
+2.
+More basic is the (:) operator, which adds an element to the front of a list. This is pronounced “cons” (short for “construct”).
+You might be tempted to try writing [1,2]:3 to add an element to the end of a list, but ghci will reject this with an error message, because the first argument of (:) must be an element, and the second must be a list.
+
+3.
+Haskell requires type names to start with an uppercase letter, and variable names must start with a lowercase letter. Bear this in mind as you read on; it makes it much easier to follow the names.
+The first thing we can do to start exploring the world of types is to get ghci to tell us more about what it's doing. ghci has a command, :set, that lets us change a few of its default behaviours. We can tell it to print more type information as follows.
+    ghci> :set +t
+    ghci> 'c'
+    'c'
+    it :: Char
+    ghci> "foo"
+    "foo"
+    it :: [Char]
+
+What the +t does is tell ghci to print the type of an expression after the expression. That cryptic it in the output can be very useful: it's actually the name of a special variable, in which ghci stores the result of the last expression we evaluated. (This isn't a Haskell language feature; it's specific to ghci alone.)
+That it variable is a handy ghci shortcut. It lets us use the result of the expression we just evaluated in a new expression.
+    ghci> "foo"
+    "foo"
+    it :: [Char]
+    ghci> it ++ "bar"
+    "foobar"
+    it :: [Char]
+
+When evaluating an expression, ghci won't change the value of it if the evaluation fails. This lets you write potentially bogus expressions with something of a safety net.
+    ghci> it
+    "foobar"
+    it :: [Char]
+    ghci> it ++ 3
+    <interactive>:1:6:
+        No instance for (Num [Char])
+        arising from the literal `3' at <interactive>:1:6
+        Possible fix: add an instance declaration for (Num [Char])
+        In the second argument of `(++)', namely `3'
+        In the expression: it ++ 3
+        In the definition of `it': it = it ++ 3
+    ghci> it
+    "foobar"
+    it :: [Char]
+    ghci> it ++ "baz"
+    "foobarbaz"
+    it :: [Char]
+
+Although it is initially useful to have :set +t giving us type information for every expression we enter, this is a facility we will quickly outgrow. After a while, we will often know what type we expect an expression to have. We can turn off the extra type information at any time, using the :unset command.
+
+
+
+
+
+WEEK 2
+
+CIS194
+
+-------------
+
+
+
+LYHFGG
+
+-------------
+
+
+
+RWH
+
+1.
+Although lists and tuples are useful, we'll often want to construct new data types of our own. This allows us to add structure to the values in our programs. Instead of using an anonymous tuple, we can give a collection of related values a name and a distinct type. Defining our own types also improves the type safety of our code: Haskell will not allow us to accidentally mix values of two types that are structurally similar but have different names.
+
+2.
+We can treat a value constructor as just another function, one that happens to create and return a new value of the type we desire.
+In Haskell, the names of types and values are independent of each other. We only use a type constructor (i.e. the type's name) in a type declaration or a type signature. We only use a value constructor in actual code. Because these uses are distinct, there is no ambiguity if we give a type constructor and a value constructor the same name. If we are writing a type signature, we must be referring to a type constructor. If we are writing an expression, we must be using the value constructor.
+Not only is it legal for a value constructor to have the same name as its type constructor, it's normal: you'll see this all the time in regular Haskell code.
+
+3.
+There is some overlap between tuples and user-defined algebraic data types.
+Algebraic data types allow us to distinguish between otherwise identical pieces of information. Two tuples with elements of the same type are structurally identical, so they have the same type.
+    a = ("Porpoise", "Grey")
+    b = ("Table", "Oak")
+
+Since they have different names, two algebraic data types have distinct types, even if they are otherwise structurally equivalent.
+    data Cetacean = Cetacean String String
+    data Furniture = Furniture String String
+    c = Cetacean "Porpoise" "Grey"
+    d = Furniture "Table" "Oak"
+
+This lets us bring the type system to bear in writing programs with fewer bugs. With the tuples we defined above, we could conveivably pass a description of a whale to a function expecting a chair, and the type system could not help us. With the algebraic data types, there is no such possibility of confusion.
+There is no hard and fast rule for deciding when it's better to use a tuple or a distinct data type, but here's a rule of thumb to follow. If you're using compound values widely in your code (as almost all non-trivial programs do), adding "data" declarations will benefit you in both type safety and readability. For smaller, localised uses, a tuple is usually fine.
+
+4.
+As you read functions that match on lists, you'll frequently find that the names of the variables inside a pattern resemble (x:xs) or (d:ds). This is a popular naming convention. The idea is that the name xs has an “s” on the end of its name as if it's the “plural” of x, because x contains the head of the list, and xs the remaining elements.
+
+5.
+Within the body of a function, we can introduce new local variables whenever we need them, using a "let" expression. Here is a simple function that determines whether we should lend some money to a customer. We meet a money reserve of at least 100, we return our new balance after subtracting the amount we have loaned.
+    -- file: ch03/Lending.hs
+    lend amount balance =   let reserve    = 100
+                                newBalance = balance - amount
+                            in if balance < reserve
+                                then Nothing
+                                else Just newBalance
+
+The keywords to look out for here are let, which starts a block of variable declarations, and "in", which ends it. Each line introduces a new variable. The name is on the left of the =, and the expression to which it is bound is on the right.
+
+Let us re-emphasise our wording: a name in a "let" block is bound to an expression, not to a value. Because Haskell is a lazy language, the expression associated with a name won't actually be evaluated until it's needed. In the above example, we will not compute the value of "newBalance" if we do not meet our reserve.
+When we define a variable in a "let" block, we refer to it as a let-bound variable. This simply means what it says: we have bound the variable in a "let" block.
+
+We can use the names of a variable in a "let" block both within the block of declarations and in the expression that follows the "in" keyword.
+In general, we'll refer to the places within our code where we can use a name as the name's *scope*. If we can use a name, it's *in scope*, otherwise it's *out of scope*. If a name is visible throughout a source file, we say it's at the *top level*. 
+
+6.
+We can use another mechanism to introduce local variables: the "where" clause. The definitions in a "where" clause apply to the code that *precedes* it. Here's a similar function to "lend", using "where" instead of "let".
+
+    -- file: ch03/Lending.hs
+    lend2 amount balance =  if amount < reserve * 0.5
+                            then Just newBalance
+                            else Nothing
+        where reserve    = 100
+            newBalance = balance - amount
+
+While a "where" clause may initially seem weird, it offers a wonderful aid to readability. It lets us direct our reader's focus to the important details of an expression, with the supporting definitions following afterwards.
+
+7.
+We refer to a pattern that always succeeds as *irrefutable*. Plain variable names and the wild card "_" are examples of irrefutable patterns.
+
+
+
+
+
+WEEK 3
+
+CIS194
+
+1.
+The word “polymorphic” comes from Greek (πολύμορφος) and means “having many forms”: something which is polymorphic works for multiple types. One important thing to remember about polymorphic functions is that the caller gets to pick the types. When you write a polymorphic function, it must work for every possible input type. 
+
+2.
+The 'Prelude' is a module with a bunch of standard definitions that gets implicitly imported into every Haskell program
+
+3.
+Functions which have certain inputs that will make them recurse infinitely are, or that crash for certain inputs, are called 'partial funtions'.
+Functions which are well-defined on all possible inputs are known as 'total functions'.
+It is good Haskell practice to avoid partial functions as much as possible. Actually, avoiding partial functions is good practice in any programming language — but in most of them it’s ridiculously annoying. Haskell tends to make it quite easy and sensible.
+
+
+
+LYHFGG
+
+-------------
+
+
+
+RWH
+
+-------------
+
+
+
+
+
+WEEK 3
+
+CIS194
+
+1.
+In order to define anonymous functions - also called lambda functions -, it is possible to use the following notation: \x -> x > 100 (the backslash is supposed to look kind of like a lambda with the short leg missing), which is the function which takes a single argument x and outputs whether x is greater than 100.
+Another way is to use the opreator section: if ? is an operator, then (?y) is equivalent to the function \x -> x ? y, and (y?) is equivalent to \x -> y ? x. In other words, using an operator section allows us to partially apply an operator to one of its two arguments. What we get is a function of a single argument.
+
+2.
+Sometimes it is convenient to use what is called function composition:
+    foo :: (b -> c) -> (a -> b) -> (a -> c)
+    foo f g = \x -> f (g x)
+As it turns out, foo is really called (.), and represents function composition. That is, if f and g are functions, then f . g is the function which does first g and then f. Function composition can be quite useful in writing concise, elegant code. It fits well in a “wholemeal” style where we think about composing together successive high-level transformations of a data structure.
+
+3.
+In reality, all functions in Haskell take only one argument. In fact, the multi-argument functions take an argument as input and output another function; for example, a function f :: a -> b -> c is equivalent to a function f' :: a -> (b -> c).
+This idea of representing multi-argument functions as one-argument functions returning functions is known as currying, named for the British mathematician and logician Haskell Curry.
+
+4.
+If we want to actually represent a function of two arguments we can use a single argument which is a tuple.
+In order to convert between the two representations of a two-argument function, the standard library defines functions called curry and uncurry, defined like this (except with different names):
+    schönfinkel :: ((a,b) -> c) -> a -> b -> c
+    schönfinkel f x y = f (x,y)
+    unschönfinkel :: (a -> b -> c) -> (a,b) -> c
+    unschönfinkel f (x,y) = f x y
+
+5.
+The fact that functions in Haskell are curried makes partial application particularly easy. The idea of partial application is that we can take a function of multiple arguments and apply it to just some of its arguments, and get out a function of the remaining arguments. But as we’ve just seen, in Haskell there are no functions of multiple arguments! Every function can be “partially applied” to its first (and only) argument, resulting in a function of the remaining arguments.
+Note that Haskell doesn’t make it easy to partially apply to an argument other than the first. The one exception is infix operators, which as we’ve seen, can be partially applied to either of their two arguments using an operator section. In practice this is not that big of a restriction. There is an art to deciding the order of arguments to a function to make partial applications of it as useful as possible: the arguments should be ordered from from “least to greatest variation”, that is, arguments which will often be the same should be listed first, and arguments which will often be different should come last.
+
+6.
+The style of coding in which we define a function without reference to its arguments—in some sense saying what a function is rather than what it does—is known as “point-free” style.
+
+
+
+LYHFGG
+
+1.
+Haskell functions can take functions as parameters and return functions as return values.
+A function that does either of those is called a higher order function. Higher order functions aren't just a part of the Haskell experience, they pretty much are the Haskell experience.
+It turns out that if you want to define computations by defining what stuff is instead of defining steps that change some state and maybe looping them, higher order functions are indispensable. They're a really powerful way of solving problems and thinking about programs.
+
+2.
+Every function in Haskell officially only takes one parameter. All the functions that accept several parameters so far have been curried functions.
+
+3.
+Putting a space between two things is simply function application. The space is sort of like an operator and it has the highest precedence.
+Let's examine the type of max. 
+    max :: (Ord a) => a -> a -> a
+That can also be written as 
+    max :: (Ord a) => a -> (a -> a)
+That could be read as: max takes an a and returns (that's the ->) a function that takes an a and returns an a. That's why the return type and the parameters of functions are all simply separated with arrows.
+Simply speaking, if we call a function with too few parameters, we get back a partially applied function, meaning a function that takes as many parameters as we left out. Using partial application (calling functions with too few parameters, if you will) is a neat way to create functions on the fly so we can pass them to another function or to seed them with some data.
+
+4.
+A single higher order function can be used in very versatile ways. Imperative programming usually uses stuff like for loops, while loops, setting something to a variable, checking its state, etc. to achieve some behavior and then wrap it around an interface, like a function.
+Functional programming uses higher order functions to abstract away common patterns, like examining two lists in pairs and doing something with those pairs or getting a set of solutions and eliminating the ones you don't need.
+
+5.
+map takes a function and a list and applies that function to every element in the list, producing a new list.
+Let's see what its type signature is and how it's defined.
+    map :: (a -> b) -> [a] -> [b]
+    map _ [] = []
+    map f (x:xs) = f x : map f xs
+The type signature says that it takes a function that takes an a and returns a b, a list of a's and returns a list of b's. It's interesting that just by looking at a function's type signature, you can sometimes tell what it does. map is one of those really versatile higher-order functions that can be used in millions of different ways.
+
+6.
+filter is a function that takes a predicate (a predicate is a function that tells whether something is true or not, so in our case, a function that returns a boolean value) and a list and then returns the list of elements that satisfy the predicate.
+The type signature and implementation go like this:
+    filter :: (a -> Bool) -> [a] -> [a]
+    filter _ [] = []
+    filter p (x:xs) 
+        | p x       = x : filter p xs
+        | otherwise = filter p xs
+Pretty simple stuff. If p x evaluates to True, the element gets included in the new list. If it doesn't, it stays out.
+
+7.
+Lambdas are basically anonymous functions that are used because we need some functions only once. Normally, we make a lambda with the sole purpose of passing it to a higher-order function.
+To make a lambda, we write a \ (because it kind of looks like the greek letter lambda if you squint hard enough) and then we write the parameters, separated by spaces. After that comes a -> and then the function body. We usually surround them by parentheses, because otherwise they extend all the way to the right.
+
+8.
+Back when we were dealing with recursion, we noticed a theme throughout many of the recursive functions that operated on lists. Usually, we'd have an edge case for the empty list. We'd introduce the x:xs pattern and then we'd do some action that involves a single element and the rest of the list. It turns out this is a very common pattern, so a couple of very useful functions were introduced to encapsulate it.
+These functions are called folds. They're sort of like the map function, only they reduce the list to some single value.
+A fold takes a binary function, a starting value (I like to call it the accumulator) and a list to fold up. The binary function itself takes two parameters.
+The binary function is called with the accumulator and the first (or last) element and produces a new accumulator. Then, the binary function is called again with the new accumulator and the now new first (or last) element, and so on. Once we've walked over the whole list, only the accumulator remains, which is what we've reduced the list to.
+
+9.
+First let's take a look at the foldl function, also called the left fold. It folds the list up from the left side.
+The binary function is applied between the starting value and the head of the list. That produces a new accumulator value and the binary function is called with that value and the next element, etc.
+The type of the accumulator value and the end result is always the same when dealing with folds. Remember that if you ever don't know what to use as a starting value, it'll give you some idea. 
+
+10.
+The right fold, foldr works in a similar way to the left fold, only the accumulator eats up the values from the right.
+Also, the left fold's binary function has the accumulator as the first parameter and the current value as the second one (so \acc x -> ...), the right fold's binary function has the current value as the first parameter and the accumulator as the second one (so \x acc -> ...). 
+
+11.
+Folds can be used to implement any function where you traverse a list once, element by element, and then return something based on that.
+Whenever you want to traverse a list to return something, chances are you want a fold. That's why folds are, along with maps and filters, one of the most useful types of functions in functional programming.
+
+
+12.
+The foldl1 and foldr1 functions work much like foldl and foldr, only you don't need to provide them with an explicit starting value. They assume the first (or last) element of the list to be the starting value and then start the fold with the element next to it.
+With that in mind, the sum function can be implemented like so: sum = foldl1 (+).
+Because they depend on the lists they fold up having at least one element, they cause runtime errors if called with empty lists. foldl and foldr, on the other hand, work fine with empty lists. When making a fold, think about how it acts on an empty list. If the function doesn't make sense when given an empty list, you can probably use a foldl1 or foldr1 to implement it.
+
+13.
+The $ function is called function application. Here's how it's defined:
+    ($) :: (a -> b) -> a -> b
+    f $ x = f x
+Whereas normal function application (putting a space between two things) has a really high precedence, the $ function has the lowest precedence.
+Function application with a space is left-associative (so f a b c is the same as ((f a) b) c), function application with $ is right-associative.
+
+14.
+In mathematics, function composition is defined like this: (f ° g)(x) = f(g(x)), meaning that composing two functions produces a new function that, when called with a parameter, say, x is the equivalent of calling g with the parameter x and then calling the f with that result.
+In Haskell, function composition is pretty much the same thing. We do function composition with the . function, which is defined like so:
+    (.) :: (b -> c) -> (a -> b) -> a -> c
+    f . g = \x -> f (g x)
+Mind the type declaration. f must take as its parameter a value that has the same type as g's return value.
+So the resulting function takes a parameter of the same type that g takes and returns a value of the same type that f returns.
+One of the uses for function composition is making functions on the fly to pass to other functions. Sure, can use lambdas for that, but many times, function composition is clearer and more concise.
+Function composition is right-associative, so we can compose many functions at a time. The expression f (g (z x)) is equivalent to (f . g . z) x.
+But what about functions that take several parameters? Well, if we want to use them in function composition, we usually have to partially apply them just so much that each function takes just one parameter.
+
+
+
+RWH
+
+-------------
+
+
+
+Bonus
+On the $ and . operators:
+https://stackoverflow.com/questions/940382/what-is-the-difference-between-dot-and-dollar-sign/1290727#1290727
+
+
+
+
+
+WEEK 5
+
+CIS194
+
+1.
+Haskell’s particular brand of polymorphism is known as parametric polymorphism. Essentially, this means that polymorphic functions must work uniformly for any input type. 
+We say that a function like f :: a -> a -> a is parametric in the type a. Here “parametric” is just a fancy term for “works uniformly for any type chosen by the caller”.
+
+2.
+Num, Eq, Ord, and Show are type classes, and we say that (==), (<), and (+) are “type-class polymorphic”. Intuitively, type classes correspond to sets of types which have certain operations defined for them, and type class polymorphic functions work only for types which are instances of the type class(es) in question.
+Let’s look at the type of (==) again:
+    (==) :: Eq a => a -> a -> Bool
+The Eq a that comes before the => is a type class constraint. We can read this as saying that for any type a, as long as a is an instance of Eq, (==) can take two values of type a and return a Bool. It is a type error to call the function (==) on some type which is not an instance of Eq. If a normal polymorphic type is a promise that the function will work for whatever type the caller chooses, a type class polymorphic function is a restricted promise that the function will work for any type the caller chooses, as long as the chosen type is an instance of the required type class(es).
+The important thing to note is that when (==) (or any type class method) is used, the compiler uses type inference to figure out which implementation of (==) should be chosen, based on the inferred types of its arguments.
+
+
+
+
+
+WEEK 6
+
+CIS194
+
+1.
+Haskell has lazy evaluation.
+
+2.
+Under a strict evaluation strategy, function arguments are completely evaluated before passing them to the function.
+The benefit of strict evaluation is that it is easy to predict when and in what order things will happen. Usually languages with strict evaluation will even specify the order in which function arguments should be evaluated (e.g. from left to right).
+
+3.
+By “side effect” we mean anything that causes evaluation of an expression to interact with something outside itself.
+
+4.
+Lazy evaluation makes it hard to reason about when things will be evaluated; hence including side effects in a lazy language would be extremely unintuitive.
+Historically, this is the reason Haskell is pure: initially, the designers of Haskell wanted to make a lazy functional language, and quickly realized it would be impossible unless it also disallowed side effects.
+
+5.
+Under a lazy evaluation strategy, evaluation of function arguments is delayed as long as possible: they are not evaluated until it actually becomes necessary to do so.
+When some expression is given as an argument to a function, it is simply packaged up as an unevaluated expression (called a “thunk”, don’t ask me why) without doing any actual work.
+
+6.
+The slogan to remember is “pattern matching drives evaluation”. To reiterate the important points:
+- Expressions are only evaluated when pattern-matched
+- …only as far as necessary for the match to proceed, and no farther!
+
+7.
+Laziness has some very interesting, pervasive, and nonobvious consequences.
+    Purity: a lazy evaluation strategy essentially forces you to also choose purity
+    Understanding space usage: one of the downsides is that it sometimes becomes tricky to reason about the space usage of programs
+    Short-circuiting operators
+    User-defined control structures
+    Infinite data structures
+    Pipelining/wholemeal programming: doing “pipelined” incremental transformations of a large data structure can actually be memory-efficient, because with laziness each stage of the pipeline can operate in lockstep, only generating each bit of the result as it is demanded by the next stage in the pipeline
+    Dynamic programming
+
+
+
+
+
+WEEK 7
+
+CIS194
+
+1.
+It is possible to implement a fold for many (though not all) data types.
+The fold for T will take one (higher-order) argument for each of T’s constructors, encoding how to turn the values stored by that constructor into a value of the result type—assuming that any recursive occurrences of T have already been folded into a result.
+
+2.
+An important standard type class is Monoid, found in the Data.Monoid module:
+class Monoid m where
+    mempty  :: m
+    mappend :: m -> m -> m  -- mappend = (<>)
+    mconcat :: [m] -> m
+    mconcat = foldr mappend mempty
+Monoids show up everywhere, once you know to look for them. 
+
+
+
+
+
+WEEK 8
+
+CIS194
+
+1.
+The values of type IO a are descriptions of effectful computations: as an example, a value of type IO a is like a recipe for producing a value of type a.
+
+
+
+RWH
+
+1.
+Haskell's I/O system is powerful and expressive. Haskell strictly separates pure code from code that could cause things to occur in the world. That is, it provides a complete isolation from side-effects in pure code. Besides helping programmers to reason about the correctness of their code, it also permits compilers to automatically introduce optimizations and parallelism.
+
+2.
+Anything that is type IO something is an I/O action. You can store it and nothing will happen.
+    ghci> let writefoo = putStrLn "foo"
+    ghci> writefoo
+    foo
+In this example, the output foo is not a return value from putStrLn. Rather, it's the side effect of putStrLn actually writing foo to the terminal.
+Notice one other thing: ghci actually executed writefoo. This means that, when given an I/O action, ghci will perform it for you on the spot.
+
+3.
+I/O actions:
+    - have the type IO a
+    - are first-classe values in Haskelland fit seamlessly with the Haskell's type system
+    - produce an effect when performed, but not when evalueted; that is, they only produce an effect when called by soemthing else in an I/O context
+    - any expression may produce and action as its value, but the action will not perform I/O until it is executed inside another I/O action
+    - perfrorming an action type IO a may perform I/O and will ultimately deliver a result of type a
+
+4.
+main itself is an I/O action with type IO ().
+You can only perform I/O actions from within other I/O actions. All I/O in Haskell programs is driven from the top at main, which is where execution of every Haskell program begins. This, then, is the mechanism that provides isolation from side effects in Haskell: you perform I/O in your IO actions, and call pure (non-I/O) functions from there. 
+Most Haskell code is pure; the I/O actions perform I/O and call that pure code.
+do is a convenient way to define a sequence of actions. The use of do is needed only when there are more than one action to be performed. The value of a do block is the value of the last action executed.
+
+5.
+In Haskell, return is the opposite of <-. That is, return takes a pure value and wraps it inside IO.
+Since every I/O action must return some IO type, if your result came from pure computation, you must use return to wrap it in IO.
+As an example, if 7 is an Int, then return 7 would create an action stored in a value of type IO Int. When executed, that action would produce the result 7.
+Many languages have a keyword named return that aborts execution of a function immediately and returns a value to the caller.
+The Haskell return function is quite different. In Haskell, return is used to wrap data in a monad. When speaking about I/O, return is used to take pure data and bring it into the IO monad
+
+6.
+Most languages do not make a distinction between a pure function and an impure one. Haskell has functions in the mathematical sense: they are purely computations which cannot be altered by anything external. Moreover, the computation can be performed at any time—or even never, if its result is never needed.
+Working with I/0, a new tool is needed: that tool in Haskell is called actions. Actions resemble functions. They do nothing when they are defined, but perform some task when they are invoked. I/O actions are defined within the IO monad.
+
+
+
+
+
+WEEK 9
+
+CIS194
+
+1.
+Just as every expression has a type, types themselves have “types”, called kinds. In ghci we can ask about the kinds of types using :kind.
+Every type which can actually serve as the type of some values has kind *.
+What about Maybe? Notice that there are no values of type Maybe. There are values of type Maybe Int, and of type Maybe Bool, but not of type Maybe. But Maybe is certainly a valid type-like-thing.
+    Prelude> :k Maybe
+    Maybe :: * -> *
+ghci tells us that Maybe has kind * -> *. Maybe is, in a sense, a function on types — we usually call it a type constructor.
+
+
+
+Typeclassopedia (https://wiki.haskell.org/Typeclassopedia#Functor)
+
+1.
+The Functor class  is the most basic and ubiquitous type class in the Haskell libraries.
+A simple intuition is that a Functor represents a “container” of some sort, along with the ability to apply a function uniformly to every element in the container.
+Another intuition is that a Functor represents some sort of “computational context”. This intuition is generally more useful, but is more difficult to explain, precisely because it is so general.
+
+2.
+As far as the Haskell language itself is concerned, the only requirement to be a Functor is an implementation of fmap with the proper type.
+Any sensible Functor instance, however, will also satisfy the functor laws, which are part of the definition of a mathematical functor. There are two: 
+    1. fmap id = id
+    2. fmap (f . g) = fmap f . fmap g
+Together, these laws ensure that fmap g does not change the structure of a container, only the elements. Equivalently, and more simply, they ensure that fmap g changes a value without altering its context ∗. 
+The first law says that mapping the identity function over every item in a container has no effect.
+The second says that mapping a composition of two functions over every item in a container is the same as first mapping one function, and then mapping the other. 
+
+3.
+In fact, any Functor instance satisfying the first law (fmap id = id) will automatically satisfy the second law as well.
+Practically, this means that only the first law needs to be checked (usually by a very straightforward induction) to ensure that a Functor instance is valid.
+
+
+
+
+
+WEEK 10
+
+CIS194
+
+1.
+Sometimes is needed to apply functions which are themselves in a Functor context to values in a Functor context.
+Functors for which this sort of “contextual application” is possible are called applicative, and the Applicative class (defined in Control.Applicative) captures this pattern.
+    class Functor f => Applicative f where
+    pure  :: a -> f a
+    (<*>) :: f (a -> b) -> f a -> f b
+
+The (<*>) operator (often pronounced “ap”, short for “apply”) encapsulates exactly this principle of “contextual application”.
+Note also that the Applicative class requires its instances to be instances of Functor as well, so we can always use fmap with instances of Applicative.
+Finally, note that Applicative also has another method, pure, which lets us inject a value of type a into a container.
+
+2.
+pure is for situations where it is needed to apply some function to arguments in the context of some functor f, but one or more of the arguments is not in f — those arguments are “pure”, so to speak.
+
+3.
+There is only one really “interesting” law for Applicative:
+    f `fmap` x === pure f <*> x
+Mapping a function f over a container x ought to give the same results as first injecting the function into the container, and then applying it to x with (<*>).
+There are other laws, but they are not as instructive.
+
+
+
+Typeclassopedia (https://wiki.haskell.org/Typeclassopedia#Applicative)
+
+1.
+A somewhat newer addition to the pantheon of standard Haskell type classes, applicative functors represent an abstraction lying in between Functor and Monad in expressivity.
+It encapsulates certain sorts of “effectful” computations in a functionally pure way, and encourages an “applicative” programming style.
+
+2.
+Functor allows to lift a “normal” function to a function on computational contexts. But fmap doesn’t allow to apply a function which is itself in a context to a value in a context.
+Applicative gives just such a tool, (<*>). It also provides a method, pure, for embedding values in a default, “effect free” context
+
+3.
+(<*>): the best way of thinking about it comes from noting that the type of (<*>) is similar to the type of ($), but with everything enclosed in an f. In other words, (<*>) is just function application within a computational context.
+The type of (<*>) is also very similar to the type of fmap; the only difference is that the first parameter is f (a -> b), a function in a context, instead of a “normal” function (a -> b).
+
+4.
+pure takes a value of any type a, and returns a context/container of type f a. The intention is that pure creates some sort of “default” container or “effect free” context.
+In fact, the behavior of pure is quite constrained by the laws it should satisfy in conjunction with (<*>). Usually, for a given implementation of (<*>) there is only one possible implementation of pure.
+
+5.
+There are four laws that Applicative instances should satisfy. In some sense, they are all concerned with making sure that pure deserves its name.
+i)      The identity law:
+            pure id <*> v = v
+ii)     Homomorphism:
+            pure f <*> pure x = pure (f x)
+        Intuitively, applying a non-effectful function to a non-effectful argument in an effectful context is the same as just applying the function to the argument and then injecting the result into the context with pure.
+iii)    Interchange:
+            u <*> pure y = pure ($ y) <*> u
+        Intuitively, this says that when evaluating the application of an effectful function to a pure argument, the order in which we evaluate the function and its argument doesn't matter.
+iv)     Composition:
+            u <*> (v <*> w) = pure (.) <*> u <*> v <*> w 
+        In some sense it is expressing a sort of associativity property of (<*>). The reader may wish to simply convince themselves that this law is type-correct.
+Considered as left-to-right rewrite rules, the homomorphism, interchange, and composition laws actually constitute an algorithm for transforming any expression using pure and (<*>) into a canonical form with only a single use of pure at the very beginning and only left-nested occurrences of (<*>). Composition allows reassociating (<*>); interchange allows moving occurrences of pure leftwards; and homomorphism allows collapsing multiple adjacent occurrences of pure into one.
+There is also a law specifying how Applicative should relate to Functor:
+    fmap g x = pure g <*> x
+It says that mapping a pure function g over a context x is the same as first injecting g into a context with pure, and then applying it to x with (<*>). In other words, we can decompose fmap into two more atomic operations: injection into a context, and application within a context.
+
+
+
+
+
+WEEK 11
+
+CIS194
+
+1.
+There are actually two possible instances of Applicative for lists: one that matches up the list of functions and list of arguments elementwise (that is, it “zips” them together), and one that combines functions and arguments in all possible ways.
+
+2.
+Functor is a nifty tool but relatively straightforward. At first glance it seems like Applicative doesn’t add that much beyond what Functor already provides, but it turns out that it’s a small addition with a huge impact. Applicative deserves to be called a “model of computation”, while Functor doesn’t.
+When working with things like Applicative and Monad, it’s very important to keep in mind that there are multiple levels of abstraction involved. Roughly speaking, an abstraction is something which hides details of a lower level, providing a “high-level” interface that can be used (ideally) without thinking about the lower level—although the details of the lower level often “leak through” in certain cases.
+Haskell provides many nice tools for constructing multiple layers of abstraction within Haskell programs themselves, that is, it is possible to dynamically extend the “programming language” layer stack upwards. This is a powerful facility but can lead to confusion. One must learn to explicitly be able to think on multiple levels, and to switch between levels.
+
+
+
+
+
+WEEK 12
+
+CIS194
+
+1.
+
+
+
+
+Typeclassopedia (https://wiki.haskell.org/Typeclassopedia#Monad)
+
+1.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
