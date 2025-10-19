@@ -81,7 +81,3 @@ excludeNumbers n = [i + j + 2*i*j | j <- [1..n], i <- [1..j], i + j + 2*i*j <= n
 
 sieveSundaram :: Integer -> [Integer]
 sieveSundaram n = map (\x -> 2*x + 1) $ filter (`notElem` excludeNumbers n) [1..n] 
-
--- https://github.com/OctaviPascual/cis194-IntroductionToHaskell/blob/master/homework-04/HigherOrder.hs
--- https://github.com/severij/cis194-solutions/blob/master/homework4/Homework4.hs
--- https://github.com/glennrfisher/cis194-haskell/blob/master/04%20Higher%20Order%20Programming/homework4.hs
