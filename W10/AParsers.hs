@@ -56,6 +56,27 @@ posInt = Parser f
 -- Your code goes below here
 ------------------------------------------------------------
 
+-- note: I am doing this homework after something like two-months break from Haskell, 
+-- I am writing down different ways to do the same thing in order to refresh concepts and syntax
+
+-- Exercise 1: Functor for Parser
+first :: (a -> b) -> (a,c) -> (b,c)
+first f (x,y) = (f x, y)
+
+instance Functor Parser where
+  -- using a lambda function for the first parsing:
+  fmap f (Parser p) = Parser $ \input -> fmap (first f) (p input)
+  -- same as above, without the lambda:
+  -- fmap f (Parser p) = Parser (fmap (first f) . p)
+  -- same as above, but using the <$> operator instead of fmap:
+  -- fmap g (Parser p) = Parser $ \input -> first g <$> p input
+
+  -- bschwb and surganov are more elegant, in my opinion:
+  -- fmap f p = Parser $ fmap (first f) . runParser p
+  -- fmap g (Parser f) = Parser $ fmap (first g) . f
+
+-- Exercise 2: Applicative for Parser
+
 
 -- https://github.com/OctaviPascual/cis194-IntroductionToHaskell/tree/master/homework-10
 -- https://github.com/bschwb/cis194-solutions/tree/main/10-applicative-functors-part1
