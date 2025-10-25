@@ -469,6 +469,19 @@ Working with I/0, a new tool is needed: that tool in Haskell is called actions. 
 
 
 
+LYHFGG
+
+1.
+We've mentioned that Haskell is a purely functional language.
+Whereas in imperative languages you usually get things done by giving the computer a series of steps to execute, functional programming is more of defining what stuff is.
+In Haskell, a function can't change some state, like changing the contents of a variable (when a function changes state, we say that the function has side-effects).
+The only thing a function can do in Haskell is give us back some result based on the parameters we gave it. If a function is called two times with the same parameters, it has to return the same result.
+While this may seem a bit limiting when you're coming from an imperative world, we've seen that it's actually really cool.
+While functions being unable to change state is good because it helps us reason about our programs, there's one problem with that.
+If a function can't change anything in the world, how is it supposed to tell us what it calculated?
+In order to tell us what it calculated, it has to change the state of an output device (usually the state of the screen), which then emits photons that travel to our brain and change the state of our mind, man.
+It turns out that Haskell actually has a really clever system for dealing with functions that have side-effects that neatly separates the part of our program that is pure and the part of our program that is impure, which does all the dirty work like talking to the keyboard and the screen.
+With those two parts separated, we can still reason about our pure program and take advantage of all the things that purity offers, like laziness, robustness and modularity while efficiently communicating with the outside world.
 
 
 WEEK 9
@@ -596,28 +609,127 @@ WEEK 12
 CIS194
 
 1.
+We would like to write a parser for this file format of type:
+    parseFile :: Parser [[Int]]
+Unfortunately, this is not possible using only the Applicative interface.
+The problem is that Applicative gives us no way to decide what to do next based on previous results: we must decide in advance what parsing operations we are going to run, before we see the results.
 
+2.
+The Monad type class is defined as follows:
+class Monad m where
+  return :: a -> m a
+  (>>=) :: m a -> (a -> m b) -> m b
+  (>>)  :: m a -> m b -> m b
+  m1 >> m2 = m1 >>= \_ -> m2
+return should look familiar because it has the same type as pure: in fact, every Monad should also be an Applicative, with pure = return. 
+(>>) is just a specialized version of (>>=)
+
+3.
+(>>=) (pronounced “bind”) is where all the action is:
+    (>>=) :: m a -> (a -> m b) -> m b
+(>>=) takes two arguments. The first one is a value of type m a.
+(Incidentally, such values are sometimes called monadic values, or computations. It has also been proposed to call them mobits.
+The one thing you must not call them is “monads”, since that is a kind error: the type constructor m is a monad.)
+In any case, the idea is that a mobit of type m a represents a computation which results in a value (or several values, or no values) of type a, and may also have some sort of “effect”.
+The second argument is a function of type (a -> m b).
+That is, it is a function which will choose the next computation to run based on the result(s) of the first computation.
+This is precisely what embodies the promised power of Monad to encapsulate computations which can choose what to do next based on the results of previous computations.
+So all (>>=) really does is put together two mobits to produce a larger one, which first runs one and then the other, returning the result of the second one.
+The all-important twist is that we get to decide which mobit to run second based on the output from the first.
+
+4.
+The default implementation of (>>) should make sense now:
+    (>>)  :: m a -> m b -> m b
+    m1 >> m2 = m1 >>= \_ -> m2
+m1 >> m2 simply does m1 and then m2, ignoring the result of m1
+
+5.
+One nice thing about the Monad class is that using only return and (>>=) we can build up a lot of nice general combinators for programming with monads.
 
 
 
 Typeclassopedia (https://wiki.haskell.org/Typeclassopedia#Monad)
 
 1.
+Even if you don’t understand the intuition behind the Monad class, you can still create instances of it by just seeing where the types lead you.
+i)      The simplest possible instance of Monad is Identity.
+        The Identity monad is a monad that does not embody any computational strategy. It simply applies the bound function to its input without any modification.
+        Computationally, there is no reason to use the Identity monad instead of the much simpler act of simply applying functions to their arguments.
+        The purpose of the Identity monad is its fundamental role in the theory of monad transformers. Any monad transformer applied to the Identity monad yields a non-transformer version of that monad.
+ii)     The next simplest instance of Monad is Maybe.
+            instance Monad Maybe where
+              return :: a -> Maybe a
+              return = Just
+              (>>=) :: Maybe a -> (a -> Maybe b) -> Maybe b
+              (Just x) >>= g = g x
+              Nothing  >>= _ = Nothing
+iii)    The Monad instance for the list constructor [] is similar to its Applicative instance
+iv)     The IO constructor is a Monad, but its implementation is somewhat magical, and may in fact differ from compiler to compiler.
+        The IO monad is the only monad which is magical. It allows us to build up, in an entirely pure way, values representing possibly effectful computations.
+        The special value main, of type IO (), is taken by the runtime and actually executed, producing actual effects. Every other monad is functionally pure, and requires no special compiler support.
+        We often speak of monadic values as “effectful computations”, but this is because some monads allow us to write code as if it has side effects, when in fact the monad is hiding the plumbing which allows these apparent side effects to be implemented in a functionally pure way. 
+v)      ((->) e) is known as the reader monad, since it describes computations in which a value of type e is available as a read-only environment.
+
+2.
+There are several laws that instances of Monad should satisfy (https://wiki.haskell.org/index.php?title=Monad_laws).
+The three fundamentals ones are:
+Left identity:
+    return a >>= k = k a
+Right identity:
+    m >>= return = m
+Associativity:
+    m >>= (\x -> k x >>= h) = (m >>= k) >>= h
+The first and second laws express the fact that return behaves nicely:
+if we inject a value a into a monadic context with return, and then bind to k, it is the same as just applying k to a in the first place;
+if we bind a computation m to return, nothing changes.
+The third law essentially says that (>>=) is associative, sort of. 
+However, the presentation of the above laws, especially the third, is marred by the asymmetry of (>>=).
+It’s hard to look at the laws and see what they’re really saying.
+I prefer a much more elegant version of the laws, which is formulated in terms of (>=>).
+The monad laws reformulated in terms of (>=>) are:
+Left identity:
+    return >=> g = g
+Right identity:
+    g >=> return = g
+Associativity:
+    (g >=> h) >=> k = g >=> (h >=> k)
 
 
 
+LYHFGG
 
+1. 
+Monads are a natural extension of applicative functors and with them we're concerned with this:
+if you have a value with a context, m a, how do you apply to it a function that takes a normal a and returns a value with a context?
+That is, how do you apply a function of type a -> m b to a value of type m a? So essentially, we will want this function:
+    (>>=) :: (Monad m) => m a -> (a -> m b) -> m b
+If we have a fancy value and a function that takes a normal value but returns a fancy value, how do we feed that fancy value into the function?
+This is the main question that we will concern ourselves when dealing with monads.
+We write m a instead of f a because the m stands for Monad, but monads are just applicative functors that support >>=. The >>= function is pronounced as bind. 
 
+2.
+Just like functors have the Functor type class and applicative functors have the Applicative type class, monads come with their own type class: Monad.
+    class Monad m where
+        return :: a -> m a
+        (>>=) :: m a -> (a -> m b) -> m b
+        (>>) :: m a -> m b -> m b
+        x >> y = x >>= \_ -> y
+        fail :: String -> m a
+        fail msg = error msg
 
+3.
+The first function that the Monad type class defines is return. It's the same as pure, only with a different name. Its type is (Monad m) => a -> m a.
+It takes a value and puts it in a minimal default context that still holds that value. In other words, it takes something and wraps it in a monad.
+It always does the same thing as the pure function from the Applicative type class, which means we're already acquainted with return.
+Just a reminder: return is nothing like the return that's in most other languages. It doesn't end function execution or anything, it just takes a normal value and puts it in a context. 
 
+4.
+The next function is >>=, or bind.
+It's like function application, only instead of taking a normal value and feeding it to a normal function, it takes a monadic value (that is, a value with a context) and feeds it to a function that takes a normal value but returns a monadic value. 
 
-
-
-
-
-
-
-
+5.
+Next up, we have >>. We won't pay too much attention to it for now because it comes with a default implementation and we pretty much never implement it when making Monad instances.
+The final function of the Monad type class is fail. We never use it explicitly in our code. Instead, it's used by Haskell to enable failure in a special syntactic construct for monads that we'll meet later. We don't need to concern ourselves with fail too much for now. 
 
 
 
